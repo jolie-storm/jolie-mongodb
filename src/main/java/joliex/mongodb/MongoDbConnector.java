@@ -122,7 +122,8 @@ public class MongoDbConnector extends JavaService
 			zone = DateTimeZone.forID( timeZone );
 
 			ServerAddress serverAddress = new ServerAddress( host, port );
-			MongoCredential credential = MongoCredential.createCredential( username, dbname, password.toCharArray() );
+
+			MongoCredential credential = MongoCredential.createScramSha1Credential( username, dbname, password.toCharArray() );
 			mongoClientOptions = MongoClientOptions.builder().build();
 
 			if ( null != mongoClient ) {
