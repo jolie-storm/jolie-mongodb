@@ -1,0 +1,25 @@
+{
+   "name": "@jolie/mongodb",
+   "description": "Jolie MongoDB Connector",
+   "author": "Balint Maschio",
+   "version": "0.0.4",
+   "license": "Apache-2.0",
+   "homepage": "https://github.com/jolie-storm/jolie-mongodb#readme",
+   "bugs": {
+      "homepage": "https://github.com/jolie-storm/jolie-mongodb/issues"
+    },
+   "keywords": ["mongodb" , "jolie" , "microservices" ],
+   "scripts": {
+      "jolive": "npx nodemon --exec jolie ./server.ol",
+      "clean": "rm ./hs_err_pid*"
+   },
+   "distJar": "mongdb-connector-1.0.0.jar",
+   "dependencies": {
+      "mvn": {
+         "org.mongodb:mongo-java-driver": "3.12.8",
+         "joda-time:joda-time": "2.9.4",
+         "org.bouncycastle:bcprov-jdk15on": "1.65"
+      },
+      "npm": {}
+   }
+}

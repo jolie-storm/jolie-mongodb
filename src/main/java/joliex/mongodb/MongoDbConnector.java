@@ -151,7 +151,6 @@ public class MongoDbConnector extends JavaService
 	{
 		Value v = Value.create();
 		FindIterable<BsonDocument> iterable = null;
-		;
 		try {
 
 			String collectionName = request.getFirstChild( "collection" ).strValue();
@@ -167,11 +166,19 @@ public class MongoDbConnector extends JavaService
 				prepareBsonQueryData( bsonQueryDocument, request.getFirstChild( "filter" ) );
 				printlnJson( "Query filter", bsonQueryDocument );
 				if ( request.hasChildren( "sort" ) && request.hasChildren( "limit" ) ) {
+
 					BsonDocument bsonSortDocument = BsonDocument.parse( request.getFirstChild( "sort" ).strValue() );
 					prepareBsonQueryData( bsonSortDocument, request.getFirstChild( "sort" ) );
 					printlnJson( "Query sort", bsonSortDocument );
 					int limitQuery = request.getFirstChild( "limit" ).intValue();
-					iterable = collection.find( bsonQueryDocument ).sort( bsonSortDocument ).limit( limitQuery );
+
+					if (request.hasChildren("projection")) {
+						BsonDocument bsonProjectionDocument = BsonDocument.parse(request.getFirstChild("projection").strValue());
+						iterable = collection.find( bsonQueryDocument ).sort( bsonSortDocument ).limit( limitQuery ).projection(bsonProjectionDocument);
+					}else{
+						iterable = collection.find( bsonQueryDocument ).sort( bsonSortDocument ).limit( limitQuery );
+					}
+
 				}
 
 				if ( request.hasChildren( "sort" ) && request.hasChildren( "limit" ) && request.hasChildren( "skip" ) ) {
@@ -180,23 +187,46 @@ public class MongoDbConnector extends JavaService
 					printlnJson( "Query sort", bsonSortDocument );
 					int limitQuery = request.getFirstChild( "limit" ).intValue();
 					int skipPosition = request.getFirstChild( "skip" ).intValue();
-					iterable = collection.find( bsonQueryDocument ).sort( bsonSortDocument ).limit( limitQuery ).skip( skipPosition );
+					if (request.hasChildren("projection")) {
+						BsonDocument bsonProjectionDocument = BsonDocument.parse(request.getFirstChild("projection").strValue());
+						iterable = collection.find( bsonQueryDocument ).sort( bsonSortDocument ).limit( limitQuery ).skip( skipPosition ).projection(bsonProjectionDocument);
+					}else{
+						iterable = collection.find( bsonQueryDocument ).sort( bsonSortDocument ).limit( limitQuery ).skip( skipPosition );
+					}
+
 				}
 
 				if ( request.hasChildren( "sort" ) && !request.hasChildren( "limit" ) ) {
 					BsonDocument bsonSortDocument = BsonDocument.parse( request.getFirstChild( "sort" ).strValue() );
 					prepareBsonQueryData( bsonSortDocument, request.getFirstChild( "sort" ) );
 					printlnJson( "Query sort", bsonSortDocument );
-					iterable = collection.find( bsonQueryDocument ).sort( bsonSortDocument );
+					if (request.hasChildren("projection")) {
+						BsonDocument bsonProjectionDocument = BsonDocument.parse( request.getFirstChild( "projection" ).strValue() );
+						iterable = collection.find( bsonQueryDocument ).sort( bsonSortDocument ).projection(bsonProjectionDocument);
+					}else{
+						iterable = collection.find( bsonQueryDocument ).sort( bsonSortDocument );
+					}
 				}
 				if ( !request.hasChildren( "sort" ) && request.hasChildren( "limit" ) ) {
+
 					int limitQuery = request.getFirstChild( "limit" ).intValue();
-					iterable = collection.find( bsonQueryDocument ).limit( limitQuery );
+					if (request.hasChildren("projection")){
+						BsonDocument bsonProjectionDocument = BsonDocument.parse( request.getFirstChild( "projection" ).strValue() );
+						iterable = collection.find( bsonQueryDocument ).limit( limitQuery ).projection(bsonProjectionDocument);
+					}else{
+						iterable = collection.find( bsonQueryDocument ).limit( limitQuery );
+					}
+
+
 
 				}
 				if ( !request.hasChildren( "sort" ) && !request.hasChildren( "limit" ) ) {
-
-					iterable = collection.find( bsonQueryDocument );
+                    if (request.hasChildren("projection")){
+						BsonDocument bsonProjectionDocument = BsonDocument.parse( request.getFirstChild( "projection" ).strValue() );
+						iterable = collection.find( bsonQueryDocument ).projection(bsonProjectionDocument);
+					}else{
+						iterable = collection.find( bsonQueryDocument );
+					}
 				}
 
 			} else {
@@ -206,7 +236,6 @@ public class MongoDbConnector extends JavaService
 					prepareBsonQueryData( bsonSortDocument, request.getFirstChild( "sort" ) );
 					printlnJson( "Query sort", bsonSortDocument );
 					int findLimit = request.getFirstChild( "limit" ).intValue();
-
 					iterable = collection.find( new Document() ).sort( bsonSortDocument );  ///.sort(bsonSortDocument).limit(limitQuery);
 				}
 				if ( request.hasChildren( "sort" ) && !request.hasChildren( "limit" ) ) {
@@ -225,6 +254,7 @@ public class MongoDbConnector extends JavaService
 				}
 
 			}
+
 			iterable.forEach( new Block<BsonDocument>()
 			{
 				@Override
@@ -389,7 +419,7 @@ public class MongoDbConnector extends JavaService
 			}
 
 			DeleteResult resultDelete = db.getCollection( collectionName, BsonDocument.class ).deleteOne( bsonQueryDocument );
-			v.getNewChild( "deleteCount" ).add( Value.create( resultDelete.getDeletedCount() ) );
+			v.getNewChild( "deletedCount" ).add( Value.create( resultDelete.getDeletedCount() ) );
 			return v;
 		} catch( MongoException ex ) {
 			throw new FaultException( "MongoException", ex );
@@ -428,7 +458,7 @@ public class MongoDbConnector extends JavaService
 			}
 			DeleteResult resultDelete = db.getCollection( collectionName, BsonDocument.class ).deleteMany( bsonQueryDocument );
 
-			v.getNewChild( "deletedCount" ).add( Value.create( resultDelete.getDeletedCount() ) );
+			v.getFirstChild("deletedCount" ).setValue( resultDelete.getDeletedCount() );
 			return v;
 		} catch( MongoException ex ) {
 			throw new FaultException( "MongoException", ex );

@@ -50,7 +50,7 @@ class MongoDbConnectorTest {
         System.out.println(sb.toString());
 
         response = mongoDbConnector.delete(deleteRequest);
-        assertEquals(1 , response.getFirstChild("deleteCount").intValue());
+        assertEquals(1 , response.getFirstChild("deletedCount").intValue());
         sb = new StringBuilder();
         JsUtils.valueToJsonString(response , true ,null , sb);
         System.out.println(sb.toString());
@@ -128,11 +128,75 @@ class MongoDbConnectorTest {
         System.out.println(sb.toString());
 
         response = mongoDbConnector.deleteMany(deleteRequest);
-        assertEquals(2 , response.getFirstChild("deleteCount").intValue());
         sb = new StringBuilder();
         JsUtils.valueToJsonString(response , true ,null , sb);
         System.out.println(sb.toString());
+        assertEquals(2 , response.getFirstChild("deletedCount").intValue());
 
 
+    }
+
+    @Test
+    void update() throws FaultException, IOException{
+
+        MongoDbConnector mongoDbConnector = new MongoDbConnector();
+        Value connectValue = Value.create();
+        connectValue.getFirstChild("host").setValue("localhost");
+        connectValue.getFirstChild("port").setValue(27017);
+        connectValue.getFirstChild("dbname").setValue("test");
+        connectValue.getFirstChild("username").setValue("test");
+        connectValue.getFirstChild("password").setValue("test");
+        connectValue.getFirstChild("timeZone").setValue("Europe/Berlin");
+        connectValue.getFirstChild("jsonStringDebug").setValue(false);
+        mongoDbConnector.connect(connectValue);
+
+        Value insertValue = Value.create();
+        insertValue.getFirstChild("collection").setValue("test");
+        insertValue.getFirstChild("document").getFirstChild("numberInt").setValue(100l);
+        insertValue.getFirstChild("document").getFirstChild("numberDouble").setValue(100.0);
+        insertValue.getFirstChild("document").getFirstChild("string").setValue("this is a test string");
+        StringBuilder sb = new StringBuilder();
+        JsUtils.valueToJsonString(insertValue , false ,null , sb);
+        System.out.println(sb.toString());
+
+        Value response = mongoDbConnector.insert(insertValue);
+
+        sb = new StringBuilder();
+        JsUtils.valueToJsonString(response , false ,null , sb);
+        System.out.println(sb.toString());
+
+
+
+        Value updateValue = Value.create();
+        updateValue.getFirstChild("collection").setValue("test");
+        updateValue.getFirstChild("documentUpdate").setValue("{ $set : { numberInt: '$numberInt'}}");
+        updateValue.getFirstChild("documentUpdate").getFirstChild("numberInt").setValue(110l);
+        updateValue.getFirstChild("filter").setValue("{ numberInt:{$eq: '$numberInt'}}");
+        updateValue.getFirstChild("filter").getFirstChild("numberInt").setValue(100);
+
+        sb = new StringBuilder();
+        JsUtils.valueToJsonString(insertValue , false ,null , sb);
+        System.out.println(sb.toString());
+
+        response = mongoDbConnector.update(updateValue);
+
+        sb = new StringBuilder();
+        JsUtils.valueToJsonString(response , false ,null , sb);
+        System.out.println(sb.toString());
+
+
+        Value deleteRequest = Value.create();
+        deleteRequest.getFirstChild("collection").setValue("test");
+        deleteRequest.getFirstChild("filter").setValue("{ numberInt:{$gt: '$numberInt'}}");
+        deleteRequest.getFirstChild("filter").getFirstChild("numberInt").setValue(90);
+        sb = new StringBuilder();
+        JsUtils.valueToJsonString(deleteRequest , false ,null , sb);
+        System.out.println(sb.toString());
+
+        response = mongoDbConnector.deleteMany(deleteRequest);
+        sb = new StringBuilder();
+        JsUtils.valueToJsonString(response , true ,null , sb);
+        System.out.println(sb.toString());
+        assertEquals(1 , response.getFirstChild("deletedCount").intValue());
     }
 }

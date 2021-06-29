@@ -1,0 +1,14 @@
+lib/
+custom/
+data/
+.idea/
+createuser.txt
+*.yml
+target/
+.settings/
+.classpath
+.project
+src/
+pom.xml
+packages/
+.vscode/
