@@ -1,8 +1,11 @@
 {
    "name": "@jolie/mongodb",
    "description": "Jolie MongoDB Connector",
-   "author": "Balint Maschio",
-   "version": "0.0.4",
+   "author": {
+      "name" : "Balint Maschio",
+      "email" : "bmaschio77@gmail.com"
+   },
+   "version": "0.0.5",
    "license": "Apache-2.0",
    "homepage": "https://github.com/jolie-storm/jolie-mongodb#readme",
    "bugs": {

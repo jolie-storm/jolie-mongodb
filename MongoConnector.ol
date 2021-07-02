@@ -2,6 +2,7 @@ type ConnectRequest:void{
   .host ?: string
   .dbname : string
   .port ?:int
+  .uri?: string
   .timeZone:string
   .jsonStringDebug?:bool
   .logStreamDebug?:bool

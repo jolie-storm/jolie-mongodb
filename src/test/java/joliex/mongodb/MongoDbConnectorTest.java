@@ -199,4 +199,31 @@ class MongoDbConnectorTest {
         System.out.println(sb.toString());
         assertEquals(1 , response.getFirstChild("deletedCount").intValue());
     }
+
+    @Test
+    void connect() throws FaultException, IOException {
+
+        MongoDbConnector mongoDbConnector = new MongoDbConnector();
+        Value connectValue = Value.create();
+        connectValue.getFirstChild("timeZone").setValue("Europe/Berlin");
+        connectValue.getFirstChild("dbname").setValue("test");
+        mongoDbConnector.connect(connectValue);
+
+        Value insertValue = Value.create();
+        insertValue.getFirstChild("collection").setValue("test");
+        insertValue.getFirstChild("document").getFirstChild("numberInt").setValue(100l);
+        insertValue.getFirstChild("document").getFirstChild("numberDouble").setValue(100.0);
+        insertValue.getFirstChild("document").getFirstChild("string").setValue("this is a test string");
+        StringBuilder sb = new StringBuilder();
+        JsUtils.valueToJsonString(insertValue , false ,null , sb);
+        System.out.println(sb.toString());
+
+        Value response = mongoDbConnector.insert(insertValue);
+
+        sb = new StringBuilder();
+        JsUtils.valueToJsonString(response , false ,null , sb);
+        System.out.println(sb.toString());
+
+
+    }
 }

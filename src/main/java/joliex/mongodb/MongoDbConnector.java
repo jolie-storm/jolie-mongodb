@@ -5,17 +5,7 @@
  */
 package joliex.mongodb;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.Block;
-import com.mongodb.DBObject;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
-import com.mongodb.MongoCredential;
-import com.mongodb.MongoException;
-import com.mongodb.ReadConcern;
-import com.mongodb.ReadConcernLevel;
-import com.mongodb.ServerAddress;
-import com.mongodb.WriteConcern;
+import com.mongodb.*;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
@@ -28,6 +18,9 @@ import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -63,6 +56,8 @@ import org.bson.json.JsonParseException;
 import org.bson.types.ObjectId;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+
+import javax.net.ssl.SSLContext;
 
 /**
  *
@@ -119,23 +114,34 @@ public class MongoDbConnector extends JavaService
 				is64 = false;
 			}
 
-			zone = DateTimeZone.forID( timeZone );
 
-			ServerAddress serverAddress = new ServerAddress( host, port );
 
-			MongoCredential credential = MongoCredential.createScramSha1Credential( username, dbname, password.toCharArray() );
-			mongoClientOptions = MongoClientOptions.builder().build();
 
-			if ( null != mongoClient ) {
-				System.out.println( "recovering client" );
-				db = mongoClient.getDatabase( dbname );
-			} else {
 
-				mongoClient = new MongoClient( serverAddress, credential, mongoClientOptions );
-				db = mongoClient.getDatabase( dbname );
+			if (request.hasChildren("uri")){
+				SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
+				sslContext.init(null, null, new SecureRandom());
+				MongoClientURI mongoClientURI = new  MongoClientURI (request.getFirstChild("uri").strValue(), MongoClientOptions.builder().sslContext(sslContext));
+				mongoClient = new MongoClient(mongoClientURI );
+				db = mongoClient.getDatabase(dbname);
+			}else {
+				if (null != mongoClient) {
+					System.out.println("recovering client");
+					db = mongoClient.getDatabase(dbname);
+				} else {
+					zone = DateTimeZone.forID( timeZone );
+
+					ServerAddress serverAddress = new ServerAddress( host, port );
+
+					MongoCredential credential = MongoCredential.createScramSha1Credential( username, dbname, password.toCharArray() );
+					mongoClientOptions = MongoClientOptions.builder().build();
+
+					mongoClient = new MongoClient(serverAddress, credential, mongoClientOptions);
+					db = mongoClient.getDatabase(dbname);
+				}
 			}
 
-		} catch( MongoException ex ) {
+		} catch(MongoException | NoSuchAlgorithmException | KeyManagementException ex ) {
 			throw new FaultException( "LoginConnection", ex );
 		}
 	}

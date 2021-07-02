@@ -32,6 +32,7 @@ This operation allows your service to connect to the to your instance of MongoDB
  type ConnectRequest:void{
   .host ?: string
   .dbname : string
+  .uri?:string
   .port ?:int
   .timeZone:string
   .jsonStringDebug?:bool
